@@ -23,6 +23,15 @@ placeable_buckets = {}
 --Get the translator wrapper for various bucket descriptions.
 local S = minetest.get_translator("bucket")
 
+
+
+--A helper function for water buckets' functionality with the waterworks mod.
+local function place_inlet(pos)
+	if waterworks then
+		waterworks.place_connected(pos, "inlet", {pos = pos, target = vector.add(pos, {x=0, y=1, z=0}), pressure = pos.y})
+	end
+end
+
 --Make a copy of the empty bucket's definition to freely change.
 local empty_def = table.copy(minetest.registered_items["bucket:bucket_empty"])
 
@@ -43,6 +52,7 @@ empty_def.groups.oddly_breakable_by_hand = 1
 
 --The waterworks_connected group is used to allow empty buckets to be used in waterworks' pipe networks.
 empty_def.groups.waterworks_connected = 1
+empty_def.place_param2 = 4
 
 --A simple collision box that is just big enough to fit the whole bucket mesh.
 empty_def.collision_box = {
@@ -52,6 +62,9 @@ empty_def.collision_box = {
 	},
 }
 empty_def.selection_box = empty_def.collision_box
+
+empty_def._waterworks_update_connected = place_inlet
+empty_def.on_construct = place_inlet
 
 --Can't register a node that defines these fields, so they must be erased from the copied definition table.
 empty_def.name = nil
@@ -93,8 +106,11 @@ function placeable_buckets.register(name, def)
 		--Allow buckets to define fields that change based on current fill level.
 		local extra_def = (new_def._register_per_level or function() return {} end)(i)
 
-		--Default the waterworks_connected group to 0.
+		--Remove the waterworks-related fields by default.
 		new_def.groups.waterworks_connected = 0
+		new_def.place_param2 = nil
+		new_def._waterworks_update_connected = nil
+		new_def.on_construct = nil
 
 		--Merge the given definition information into the copied definition.
 		deepmerge(new_def, def)
@@ -170,13 +186,6 @@ function placeable_buckets.register(name, def)
 	minetest.register_alias_force(def._replace, name.."_10")
 end
 
---A helper function for water buckets' functionality with the waterworks mod.
-local function place_inlet(pos)
-	if waterworks then
-		waterworks.place_connected(pos, "inlet", {pos = pos, target = vector.add(pos, {x=0, y=1, z=0}), pressure = pos.y})
-	end
-end
-
 --Regular water buckets, which can work as inlets for the waterworks mod when it is active.
 placeable_buckets.register("placeable_buckets:water", {
 	_replace = "bucket:bucket_water",
@@ -204,7 +213,7 @@ placeable_buckets.register("placeable_buckets:water", {
 	end,
 
 	_on_fill = function(pos, level)
-		if level >= 10 then
+		if level >= 100 then
 			minetest.get_meta(pos):set_int("stored_liquid", 1)
 		end
 	end,
@@ -279,7 +288,7 @@ if climate_api and minetest.settings:get_bool("placeable_buckets_rain_filling_bu
 				meta:set_int("water_level", new_water_level)
 
 				--Lastly, let nodes define a callback so that they may do something each time they're filled.
-				local def = minetest.registered_nodes[node.name]
+				local def = minetest.registered_nodes[minetest.get_node(pos).name]
 				if def._on_fill then
 					def._on_fill(pos, new_water_level)
 				end
@@ -310,7 +319,7 @@ if minetest.settings:get_bool("placeable_buckets_source_filling_buckets") then
 
 			--Replace the empty bucket with a filled bucket, the type depending on the type of liquid removed.
 			if anode.name == "default:water_source" then
-				minetest.set_node(pos, {name = "placeable_buckets:water_10"})
+				minetest.set_node(pos, {name = "placeable_buckets:water_10", param2 = 4})
 				filled = true
 			elseif anode.name == "default:river_water_source" then
 				minetest.set_node(pos, {name = "placeable_buckets:river_water_10"})
@@ -326,10 +335,10 @@ if minetest.settings:get_bool("placeable_buckets_source_filling_buckets") then
 				minetest.remove_node(above)
 
 				--Lastly, let nodes define a callback so that they may do something each time they're filled.
-				--get_node is used so that the appropriate node name is obtained, since the node has changed at this point.
+				--minetest.get_node is used so that the appropriate node name is obtained, since the node has changed at this point.
 				local def = minetest.registered_nodes[minetest.get_node(pos).name]
 				if def._on_fill then
-					def._on_fill(pos, 10)
+					def._on_fill(pos, 100)
 				end
 			end
 		end
