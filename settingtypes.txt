@@ -1,0 +1,5 @@
+placeable_buckets_rain_filling_buckets (Allow Rain to Fill Buckets) bool true
+placeable_buckets_source_filling_buckets (Allow Liquid Source Blocks to Fill Empty Buckets When Placed on Top; requires climate_api) bool true
+placeable_buckets_cooling_lava_buckets (Allow Water and Ice to Cool Lava Buckets) bool true
+placeable_buckets_vaporizing_water_buckets (Allow Lava and Fire to Vaporize Water in Buckets) bool true
+placeable_buckets_lava_buckets_incinerate_items (Allow Lava Buckets to Incinerate Items Thown on Top; requires entitycontrol) bool true

@@ -1,0 +1,28 @@
+Registration Functions
+---------
+
+placeable_buckets.register(name, def)
+	--Turn an existing bucket into a fillable bucket.
+	--Currently, this function does assume that a craftitem version of the bucket already exists.
+	--Inherits from minetest.register_node
+
+	_replace = "modename:itemname",
+	--The original name of the bucket, which will be replaced and aliased.
+
+	description = "Description",
+
+	_texture_base = "texture",
+	--The name of the set of textures that this bucket will use, which should specifically be a .png file.
+	--There should be 10 of these in total. In the textures folder, these textures would actually be "texture_1.png", "texture_2.png", etc.
+	--Omit the ending underscore, number, and .png
+
+	_groupname = "group",
+	--A copy of this node is created for every visually distinct fill level.
+	--To group these nodes togeter, this group name is required.
+
+	_register_per_level = function(level)
+	--This allows you to specify definition differences based on each fill level.
+
+	_on_fill = function(pos, level)
+	--Any time the bucket is filled, this function should be called.
+	--This includes occasions where the fill level is incremented by a fraction, and the bucket doens't visually change.
