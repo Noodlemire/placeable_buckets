@@ -391,7 +391,7 @@ end
 
 --If the entitycontrol mod is active, this will allow full lava buckets to incinerate items thrown "into" them.
 --Bucket collision is technically just a solid cube, so it's enough for the item to just land on top.
-if entitycontrol and minetest.settings:get_bool("placeable_buckets_lava_buckets_incinerate_items") then
+if minetest.get_modpath("entitycontrol") and minetest.settings:get_bool("placeable_buckets_lava_buckets_incinerate_items") then
 	--Get the item's current on_step method.
 	local old_on_step = minetest.registered_entities["__builtin:item"].on_step
 	--Override it with this extended version of the method.
